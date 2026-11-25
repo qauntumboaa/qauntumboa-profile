@@ -1,5 +1,257 @@
 let hasUserInteracted = false;
 
+function initStartAmbience() {
+  const canvas = document.getElementById('start-ambience');
+  const startScreen = document.getElementById('start-screen');
+  if (!canvas || !startScreen) return;
+
+  const context = canvas.getContext('2d');
+  if (!context) return;
+
+  const mouse = { x: -1000, y: -1000 };
+  let particles = [];
+  let animationFrame = 0;
+
+  function resize() {
+    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(window.innerWidth * scale);
+    canvas.height = Math.round(window.innerHeight * scale);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+    context.setTransform(scale, 0, 0, scale, 0, 0);
+
+    const count = Math.min(90, Math.max(36, Math.round(window.innerWidth * window.innerHeight / 18000)));
+    particles = Array.from({ length: count }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * 0.75,
+      vy: (Math.random() - 0.5) * 0.75,
+      radius: Math.random() * 1.6 + 0.5,
+      hue: Math.random() > 0.75 ? 335 : 180
+    }));
+  }
+
+  function draw() {
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    for (const particle of particles) {
+      {
+        const dx = particle.x - mouse.x;
+        const dy = particle.y - mouse.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance > 0 && distance < 100) {
+          particle.vx += dx / distance * 0.08;
+          particle.vy += dy / distance * 0.08;
+        }
+        const speed = Math.hypot(particle.vx, particle.vy);
+        if (speed > 1.1) {
+          particle.vx = particle.vx / speed * 1.1;
+          particle.vy = particle.vy / speed * 1.1;
+        } else if (speed < 0.35) {
+          particle.vx += (Math.random() - 0.5) * 0.12;
+          particle.vy += (Math.random() - 0.5) * 0.12;
+        }
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        if (particle.x < 0) {
+          particle.x = 0;
+          particle.vx = Math.abs(particle.vx);
+        } else if (particle.x > window.innerWidth) {
+          particle.x = window.innerWidth;
+          particle.vx = -Math.abs(particle.vx);
+        }
+        if (particle.y < 0) {
+          particle.y = 0;
+          particle.vy = Math.abs(particle.vy);
+        } else if (particle.y > window.innerHeight) {
+          particle.y = window.innerHeight;
+          particle.vy = -Math.abs(particle.vy);
+        }
+      }
+
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      context.fillStyle = `hsla(${particle.hue}, 90%, 70%, 0.85)`;
+      context.shadowColor = `hsla(${particle.hue}, 90%, 60%, 0.8)`;
+      context.shadowBlur = 8;
+      context.fill();
+    }
+
+    context.shadowBlur = 0;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 175) {
+          context.beginPath();
+          context.moveTo(particles[i].x, particles[i].y);
+          context.lineTo(particles[j].x, particles[j].y);
+          context.strokeStyle = `rgba(0, 206, 209, ${(1 - distance / 175) * 0.28})`;
+          context.lineWidth = 0.8;
+          context.stroke();
+        }
+      }
+    }
+
+    animationFrame = requestAnimationFrame(draw);
+  }
+
+  startScreen.addEventListener('pointermove', (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+  });
+  startScreen.addEventListener('pointerleave', () => {
+    mouse.x = -1000;
+    mouse.y = -1000;
+  });
+  window.addEventListener('resize', resize);
+
+  startScreen.addEventListener('click', () => {
+    canvas.style.opacity = '0';
+    cancelAnimationFrame(animationFrame);
+  }, { once: true });
+  startScreen.addEventListener('touchstart', () => {
+    canvas.style.opacity = '0';
+    cancelAnimationFrame(animationFrame);
+  }, { once: true });
+
+  resize();
+  draw();
+}
+
+function initProfileAmbience() {
+  const canvas = document.getElementById('profile-network');
+  const profileBlock = document.getElementById('profile-block');
+  if (!canvas || !profileBlock) return () => {};
+
+  const context = canvas.getContext('2d');
+  if (!context) return () => {};
+
+  let width = 0;
+  let height = 0;
+  let particles = [];
+  let started = false;
+
+  function resize() {
+    const bounds = profileBlock.getBoundingClientRect();
+    const scale = Math.min(window.devicePixelRatio || 1, 2);
+    width = bounds.width;
+    height = bounds.height;
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    context.setTransform(scale, 0, 0, scale, 0, 0);
+
+    const count = Math.min(48, Math.max(24, Math.round(width * height / 5500)));
+    particles = Array.from({ length: count }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.45 + Math.random() * 0.45;
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: Math.random() * 1.4 + 0.5,
+        hue: Math.random() > 0.75 ? 310 : 275
+      };
+    });
+  }
+
+  function draw() {
+    context.clearRect(0, 0, width, height);
+
+    for (const particle of particles) {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+
+      if (particle.x < 0 || particle.x > width) particle.vx *= -1;
+      if (particle.y < 0 || particle.y > height) particle.vy *= -1;
+      particle.x = Math.max(0, Math.min(width, particle.x));
+      particle.y = Math.max(0, Math.min(height, particle.y));
+
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      context.fillStyle = `hsla(${particle.hue}, 90%, 75%, 0.8)`;
+      context.shadowColor = `hsla(${particle.hue}, 90%, 65%, 0.8)`;
+      context.shadowBlur = 7;
+      context.fill();
+    }
+
+    context.shadowBlur = 0;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 135) {
+          context.beginPath();
+          context.moveTo(particles[i].x, particles[i].y);
+          context.lineTo(particles[j].x, particles[j].y);
+          context.strokeStyle = `rgba(168, 85, 247, ${(1 - distance / 135) * 0.28})`;
+          context.lineWidth = 0.8;
+          context.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(resize);
+    observer.observe(profileBlock);
+  } else {
+    window.addEventListener('resize', resize);
+  }
+
+  return () => {
+    if (started) return;
+    started = true;
+    resize();
+    draw();
+  };
+}
+
+function initClickEffects() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  function createBurst(x, y) {
+    const burst = document.createElement('span');
+    burst.className = 'click-burst';
+    burst.setAttribute('aria-hidden', 'true');
+    burst.style.left = `${x}px`;
+    burst.style.top = `${y}px`;
+
+    for (let i = 0; i < 7; i++) {
+      const particle = document.createElement('span');
+      const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.25;
+      const distance = 16 + Math.random() * 12;
+      particle.className = 'click-burst-particle';
+      particle.style.setProperty('--particle-x', `${Math.cos(angle) * distance}px`);
+      particle.style.setProperty('--particle-y', `${Math.sin(angle) * distance}px`);
+      burst.appendChild(particle);
+    }
+
+    document.body.appendChild(burst);
+    window.setTimeout(() => burst.remove(), 450);
+  }
+
+  document.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || !(event.target instanceof Element) || event.target.closest('input[type="range"]')) return;
+    createBurst(event.clientX, event.clientY);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.detail !== 0 || !(event.target instanceof Element)) return;
+    if (event.target.closest('input[type="range"]')) return;
+
+    const target = event.target.closest('button, a, #start-screen, #profile-block') || event.target;
+    const bounds = target.getBoundingClientRect();
+    createBurst(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+  });
+}
+
 function initMedia() {
   console.log("initMedia called");
   const backgroundMusic = document.getElementById('background-music');
@@ -18,38 +270,34 @@ function initMedia() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initClickEffects();
+  initStartAmbience();
+  const startProfileAmbience = initProfileAmbience();
   const startScreen = document.getElementById('start-screen');
   const startText = document.getElementById('start-text');
   const profileName = document.getElementById('profile-name');
   const profileBio = document.getElementById('profile-bio');
-  const visitorCount = document.getElementById('visitor-count');
   const backgroundMusic = document.getElementById('background-music');
   const volumeIcon = document.getElementById('volume-icon');
   const volumeSlider = document.getElementById('volume-slider');
   const transparencySlider = document.getElementById('transparency-slider');
   const glitchOverlay = document.querySelector('.glitch-overlay');
+  const songSwitcher = document.getElementById('song-switcher');
+  const currentTrackName = document.getElementById('current-track-name');
   const profileBlock = document.getElementById('profile-block');
   const profilePicture = document.querySelector('.profile-picture');
   const profileContainer = document.querySelector('.profile-container');
   const socialIcons = document.querySelectorAll('.social-icon');
   const badges = document.querySelectorAll('.badge');
 
-  
-  const cursor = document.querySelector('.custom-cursor');
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
 
   if (isTouchDevice) {
     document.body.classList.add('touch-device');
-  } else {
-    document.addEventListener('pointermove', (event) => {
-      cursor.style.left = `${event.clientX}px`;
-      cursor.style.top = `${event.clientY}px`;
-      cursor.style.display = 'block';
-    });
   }
 
 
-  const startMessage = "Click here to see the motion baby";
+  const startMessage = "Click me to enter";
   let startTextContent = '';
   let startIndex = 0;
   let startCursorVisible = true;
@@ -70,25 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 500);
 
 
-  function initializeVisitorCounter() {
-    try {
-      let totalVisitors = Number(localStorage.getItem('totalVisitorCount')) || 921234;
-      if (!localStorage.getItem('hasVisited')) {
-        totalVisitors++;
-        localStorage.setItem('totalVisitorCount', totalVisitors);
-        localStorage.setItem('hasVisited', 'true');
-      }
-      visitorCount.textContent = totalVisitors.toLocaleString();
-    } catch (err) {
-      visitorCount.textContent = '921,234';
-      console.warn('Visitor counter storage is unavailable:', err);
-    }
-  }
-
-
-  initializeVisitorCounter();
-
-
   function showProfile() {
     startScreen.classList.add('hidden');
     if (backgroundMusic) {
@@ -98,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     profileBlock.classList.remove('hidden');
+    startProfileAmbience();
     if (window.gsap) {
       gsap.fromTo(profileBlock,
         { opacity: 0, y: -50 },
@@ -228,6 +458,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentAudio = backgroundMusic;
   let isMuted = false;
+  const tracks = [
+    { title: 'Stop the H8', src: 'assets/h8swag%20-%20stop%20the%20h8.mp3' },
+    { title: 'Блюз - Урал Гайсин', src: 'assets/блюз - урал гайсин.mp3' }
+  ];
+  let currentTrackIndex = 0;
+
+  songSwitcher.addEventListener('click', () => {
+    const wasPlaying = !currentAudio.paused;
+    currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+    const track = tracks[currentTrackIndex];
+
+    currentAudio.src = track.src;
+    currentAudio.load();
+    currentTrackName.textContent = track.title;
+    songSwitcher.setAttribute('aria-label', `Switch to next song. Now playing ${track.title}`);
+
+    if (wasPlaying) {
+      currentAudio.play().catch((err) => {
+        console.error('Failed to play selected song:', err);
+      });
+    }
+  });
 
   volumeIcon.addEventListener('click', () => {
     isMuted = !isMuted;

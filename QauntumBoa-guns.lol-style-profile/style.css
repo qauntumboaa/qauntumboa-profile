@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #00CED1; 
+  --primary-color: #B7A1F7;
   --secondary-color: #FF6B9E;
   --background-dark: #0A0A1A;
   --text-color: #E0E0FF;
@@ -19,29 +19,15 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   perspective: 1000px;
-  cursor: none;
-}
-
-
-.custom-cursor {
-  position: fixed;
-  width: 32px;
-  height: 32px;
-  background: url('assets/custom_cursor.png') no-repeat center center;
-  background-size: contain;
-  pointer-events: none;
-  z-index: 10000;
-  transition: transform 0.1s ease-out;
-  filter: hue-rotate(var(--cursor-hue, 0deg)); 
+  cursor: url('assets/cursor.cur') 0 1, auto;
 }
 
 
 body.home-theme {
   --primary-gradient: from-purple-400;
   --secondary-gradient: to-pink-600;
-  --primary-color: #00CED1; 
+  --primary-color: #B7A1F7;
   --secondary-color: #FF6B9E;
-  --cursor-hue: 180deg; 
 }
 
 body.hacker-theme {
@@ -49,7 +35,6 @@ body.hacker-theme {
   --secondary-gradient: to-teal-600;
   --primary-color: #22C55E; 
   --secondary-color: #2DD4BF;
-  --cursor-hue: 120deg; 
 }
 
 body.rain-theme {
@@ -57,7 +42,6 @@ body.rain-theme {
   --secondary-gradient: to-blue-600;
   --primary-color: #1E3A8A; 
   --secondary-color: #2563EB;
-  --cursor-hue: 240deg; 
 }
 
 body.anime-theme {
@@ -65,7 +49,6 @@ body.anime-theme {
   --secondary-gradient: to-red-400;
   --primary-color: #DC2626; 
   --secondary-color: #F87171;
-  --cursor-hue: 0deg; 
 }
 
 body.car-theme {
@@ -73,7 +56,6 @@ body.car-theme {
   --secondary-gradient: to-yellow-300;
   --primary-color: #EAB308; 
   --secondary-color: #FACC15;
-  --cursor-hue: 60deg; 
 }
 
 
